@@ -1,4 +1,6 @@
-all: prog
+all: prog	
+	// prog.exe -h	
+	// chcp 65001
 
 prog: main.o temp_api.o
 	gcc -o prog main.o temp_api.o
