@@ -1,9 +1,9 @@
 all: prog	
-	// prog.exe -h	
-	// chcp 65001
+	del *.o
+	main.exe -f temperature_small.csv	
 
 prog: main.o temp_api.o
-	gcc -o prog main.o temp_api.o
+	gcc -o main main.o temp_api.o
 
 main.o: main.c
 	gcc -c -o main.o main.c
@@ -13,4 +13,4 @@ temp_api.o: temp_api.c
 
 clean:
 	del *.o
-	del prog.exe	
+	del main.exe	

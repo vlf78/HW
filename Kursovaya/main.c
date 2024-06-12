@@ -1,65 +1,70 @@
-#include <stdint.h>
+#include <inttypes.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include "temp_api.h"
-
-// глобальные переменные
-struct sensor
-{
-    uint16_t year;
-    uint8_t month;
-    uint8_t day;
-    uint8_t hour;
-    uint8_t minute;
-    int8_t temperature;
-};
-
-uint32_t data_lenght=0;
-
-void loadfile(struct sensor* data, char* filename);
 
 int main(int argc, char *argv[])
 {
     struct sensor data[1000]; // если записей 600000 этогда программа вешается - BIG DATA    
+    uint32_t data_lenght=0;
+    uint16_t year = 2021;     // год фиксируем, т.к. он нигде не запрашивается
+    uint8_t month = 0;        // по умолчанию месяц не задан
+
+    if(argc==1)
+    {
+        // мини-хелп
+        printf("\nTemperature statictic application.\n");
+        printf("    main.exe -h  for help\n");
+        return 0;
+    }
 
     for(int i=0; i<argc; i++)
     {
-        printf("i = %d, argv = %s \n",i,argv[i]);
+        // printf("i = %d, argv = %s \n",i,argv[i]);
         char* str = argv[i];
         if(str[0]=='-')
         {
             switch (str[1])
             {
                 case 'h':
-                    printf("Вывод статистики работы датчика из указанного файла.\n");
-                    printf("Формат команды:\n   prog.exe -f <filename.csv> [-m <номер месяца>]\n");
-                    printf("Ключи командной строки:\n");
-                    printf("    -h  Описание функционала приложения\n");
-                    printf("    -f <filename.csv> входной файл csv для обработки\n");
-                    printf("    -m <номер месяца> если задан указанный ключ, то выводится статистика только за указанный месяц\n");
+                    printf("\nTemperature statictic application.\n");
+                    printf("Command format:\n   main.exe -f <filename.csv> [-m <month number>]\n");
+                    printf("Command string's keys:\n");
+                    printf("    -h  help\n");
+                    printf("    -f <filename.csv> input file for load\n");
+                    printf("    -m <month number> statistic only for this month\n");                    
+                    return 0;   // тут завершаем программу т.к. help не должен ничего делать
                     break;
                 case 'f':
-                    loadfile(data,argv[i+1]);
-                    print_data(data);
+                    data_lenght = loadfile(data,argv[i+1]);
+                    // print_data(data,data_lenght);
                     break;
+                case 'm':
+                    month = atoi(argv[i+1]);
             }
         }
     }
-    return 0;
-}
 
-void loadfile(struct sensor* data,char* filename)
-{
-    FILE *f;
-    int r;
-    char *str;
-    f = fopen(filename,"r");
-    r = fscanf(f,"%s",str);
-    while(r>0)
+    // выводим статистику из загруженного файла
+    if (month == 0)
     {
-        if(add_data(data,str))
-            printf("Ошибка при загрузке в строке %d",data_lenght);
-        else
-            data_lenght++;    
+        printf("Year\tMonth\tMin\tMax\tAvg\n");
+        for(int i=1; i<=12; i++)
+        {
+            printf("%d\t%d\t%d\t%d\t%d\n",year,i,min_temperature_month(data,data_lenght,year,i),max_temperature_month(data,data_lenght,year,i),average_temperature_month(data,data_lenght,year,i));
+        }
+
+        printf("\nYear average: %"PRIi8"\n", average_temperature_year(data,data_lenght,year));
+        printf("Year minimum: %"PRIi8"\n", min_temperature_year(data,data_lenght,year));
+        printf("Year maximum: %"PRIi8"\n", max_temperature_year(data,data_lenght,year));
     }
-    fclose(f);    
+    else
+    {
+        printf("\nStatictic on month: %"PRIi8"\n",month);
+        printf("Average temperature: %"PRIi8"\n", average_temperature_month(data,data_lenght,year,month));
+        printf("Minimum temperature: %"PRIi8"\n", min_temperature_month(data,data_lenght,year,month));
+        printf("Maximum temperature: %"PRIi8"\n", max_temperature_month(data,data_lenght,year,month));
+    }
+
+    return 0;
 }
