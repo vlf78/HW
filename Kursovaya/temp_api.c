@@ -9,17 +9,20 @@ uint32_t loadfile(struct sensor* data,char* filename)
     int r;
     char str[25];
     f = fopen(filename,"r");
-    r = fscanf(f,"%s",str);
-    while(r>0)
-    {
+    
+    while(1)
+    {        
+        r = fscanf(f,"%[^\n]",str); // здесь такое мудрёное вычитывание, т.к. в строке могут быть пробелы
         if(add_data(data,str,data_lenght))
             printf("Error in load string number %d\n",data_lenght+1);        
         else
-            data_lenght++;    
-        r = fscanf(f,"%s",str);       
+            data_lenght++;            
+        r = fscanf(f,"%[\n]",str); // а здесь дочитываем перевод строки
+        if(r==-1)
+            break;
     }
     fclose(f);   
-    printf("Loaded %d strings\n",data_lenght) ;
+    printf("Loaded %d strings\n",data_lenght);
     return data_lenght;
 }
 
@@ -28,6 +31,7 @@ uint8_t add_data(struct sensor* data, char* str, uint32_t index)
     int year,month,day,hour,minute,temperature;
 
     uint8_t r = sscanf(str,"%d;%d;%d;%d;%d;%d",&year,&month,&day,&hour,&minute,&temperature);
+    
     if(r<6)
         return 1;   // error
 
@@ -43,7 +47,7 @@ uint8_t add_data(struct sensor* data, char* str, uint32_t index)
 
 void print_data(struct sensor* data, uint32_t data_lenght)
 {
-    printf("\n=======Загруженные данные================\n");
+    printf("\n=======Data loaded================\n");
     for (size_t i = 0; i < data_lenght; i++)
     {
         printf("%04d-%02d-%02d %02d:%02d t=%3d\n",
@@ -59,17 +63,18 @@ void print_data(struct sensor* data, uint32_t data_lenght)
 
 int8_t average_temperature_month(struct sensor* data, uint32_t data_lenght, uint16_t year, uint8_t month)
 {
-    int16_t sum = 0;
-    uint8_t count = 0;
+    int32_t sum = 0;
+    uint16_t count = 0;    
+
     for(int i=0; i<data_lenght;i++)
     {        
         if(data[i].year == year && data[i].month == month)
         {            
             sum += data[i].temperature;
-            count++;
-            // printf("i = %d data = %d summ = %d count = %d\n",i,data[i].temperature,sum,count);
+            count++;            
         }
     }
+    
     int8_t rez = 0;
     if(count!=0)
     {
@@ -101,17 +106,18 @@ int8_t max_temperature_month(struct sensor* data, uint32_t data_lenght, uint16_t
 }
 
 int8_t average_temperature_year(struct sensor* data, uint32_t data_lenght, uint16_t year)
-{
-    int16_t sum = 0;
-    uint8_t count = 0;
+{    
+    int64_t sum = 0;
+    uint32_t count = 0;
     for(int i=0; i<data_lenght;i++)
     {        
         if(data[i].year == year)
         {
             sum += data[i].temperature;
-            count++;
+            count++;            
         }
     }
+    
     int8_t rez = 0;
     if(count!=0)
     {

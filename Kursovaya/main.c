@@ -3,9 +3,17 @@
 #include <stdlib.h>
 #include "temp_api.h"
 
+#define SIZE 520000    // количество минут в году с запасом
+
 int main(int argc, char *argv[])
-{
-    struct sensor data[1000]; // если записей 600000 этогда программа вешается - BIG DATA    
+{    
+    struct sensor* data = malloc(SIZE*sizeof(struct sensor));
+    if(!data)
+    {
+        printf("Not enough memory!");
+        return -1;
+    }
+
     uint32_t data_lenght=0;
     uint16_t year = 2021;     // год фиксируем, т.к. он нигде не запрашивается
     uint8_t month = 0;        // по умолчанию месяц не задан
@@ -15,12 +23,12 @@ int main(int argc, char *argv[])
         // мини-хелп
         printf("\nTemperature statictic application.\n");
         printf("    main.exe -h  for help\n");
+        free(data);
         return 0;
     }
 
     for(int i=0; i<argc; i++)
-    {
-        // printf("i = %d, argv = %s \n",i,argv[i]);
+    {        
         char* str = argv[i];
         if(str[0]=='-')
         {
@@ -32,7 +40,8 @@ int main(int argc, char *argv[])
                     printf("Command string's keys:\n");
                     printf("    -h  help\n");
                     printf("    -f <filename.csv> input file for load\n");
-                    printf("    -m <month number> statistic only for this month\n");                    
+                    printf("    -m <month number> statistic only for this month\n");   
+                    free(data);
                     return 0;   // тут завершаем программу т.к. help не должен ничего делать
                     break;
                 case 'f':
@@ -66,5 +75,6 @@ int main(int argc, char *argv[])
         printf("Maximum temperature: %"PRIi8"\n", max_temperature_month(data,data_lenght,year,month));
     }
 
+    free(data);
     return 0;
 }
